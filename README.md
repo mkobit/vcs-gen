@@ -36,6 +36,15 @@ Unlike other tools that simply fetch a single template, **vcs-gen** allows you t
 - **High Integrity**: 100% test coverage and strict type safety.
 - **Visual Feedback**: Search and preview templates with dry-run support.
 
+
+## Development Setup
+
+To ensure code quality before pushing, this repository uses Git config-based hooks. After cloning the repository, please run the following command to set up the hooks:
+
+```bash
+./setup_hooks.sh
+```
+
 ## Installation
 
 ### Ephemeral usage (No install required)

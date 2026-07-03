@@ -240,7 +240,9 @@ async def test_cli_section_order_lexicographic(
 
 
 @pytest.mark.asyncio
-async def test_cli_search_positional(templates_dir: Path, capsys: pytest.CaptureFixture[str]):
+async def test_cli_search_positional(
+    templates_dir: Path, capsys: pytest.CaptureFixture[str]
+):
     """Test the 'search' subcommand with a positional argument."""
     # Search for Python in fixtures
     await async_main(
@@ -258,7 +260,9 @@ async def test_cli_search_positional(templates_dir: Path, capsys: pytest.Capture
 
 
 @pytest.mark.asyncio
-async def test_cli_gitattributes(templates_dir: Path, capsys: pytest.CaptureFixture[str]):
+async def test_cli_gitattributes(
+    templates_dir: Path, capsys: pytest.CaptureFixture[str]
+):
     """Test the 'gitattributes' domain."""
     await async_main(
         [

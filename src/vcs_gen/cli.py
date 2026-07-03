@@ -309,7 +309,7 @@ class GitHubArchiveSource(TemplateSource):
         ):  # pragma: no cover
 
             def unlink_file():
-                if self.archive_path.exists():
+                if self.archive_path and self.archive_path.exists():
                     self.archive_path.unlink()
 
             await asyncio.to_thread(unlink_file)
@@ -470,7 +470,10 @@ def _add_selection_group(parser: argparse.ArgumentParser) -> None:
 
 
 def _add_domain_subparser(
-    subparsers: argparse._SubParsersAction, domain: str, help_text: str, common: argparse.ArgumentParser
+    subparsers: argparse._SubParsersAction,
+    domain: str,
+    help_text: str,
+    common: argparse.ArgumentParser,
 ) -> None:
     """Add a domain subparser (e.g., gitignore, gitattributes)."""
     parser = subparsers.add_parser(domain, help=help_text)
