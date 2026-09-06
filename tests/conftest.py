@@ -41,7 +41,7 @@ def templates_dir(pytestconfig: pytest.Config) -> Path:
 
         # Download the tarball
         with (
-            urllib.request.urlopen(TEMPLATE_URL) as response,  # noqa: S310
+            urllib.request.urlopen(TEMPLATE_URL) as response,
             tar_path.open("wb") as f,
         ):
             f.write(response.read())
