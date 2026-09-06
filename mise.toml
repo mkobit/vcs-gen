@@ -2,7 +2,7 @@
 # MISE_LOCKED=0 MISE_GLOBAL_CONFIG_FILE=/dev/null mise lock
 
 [tools]
-uv = "0.11.8"
+uv = "0.12.10"
 
 [settings]
 locked = true
