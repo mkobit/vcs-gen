@@ -3,37 +3,86 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
-      release-type:
-        description: 'Type of release (major, minor, patch)'
+      tag:
+        description: Unprefixed CalVer tag for the version already merged to main.
         required: true
-        default: 'patch'
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
+        type: string
 
 permissions:
   contents: write
-  id-token: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
   release:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
-          fetch-depth: 0
+          persist-credentials: false
 
       - name: Setup uv
         uses: astral-sh/setup-uv@b5f58b2abc5763ade55e4e9d0fe52cd1ff7979ca
         with:
           enable-cache: true
 
-      - name: Python Semantic Release
-        uses: python-semantic-release/python-semantic-release@473857367f0b2f33c09930f730248232959828d1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          # Use force to override the commit-based logic if manually triggered
-          force: ${{ github.event.inputs.release-type }}
+      - name: Validate the release version
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+          import runpy
+          import tomllib
+          from datetime import date
+          from pathlib import Path
+
+          tag = os.environ["RELEASE_TAG"]
+          match = re.fullmatch(
+              r"([1-9][0-9]{3})\.([1-9][0-9]?)\.([1-9][0-9]?)(?:-rc\.([1-9][0-9]*))?",
+              tag,
+          )
+          if match is None:
+              raise SystemExit("Use YYYY.M.D or YYYY.M.D-rc.N with no leading zeroes.")
+          year, month, day, candidate = match.groups()
+          date(int(year), int(month), int(day))
+          version = f"{year}.{month}.{day}"
+          if candidate is not None:
+              version += f"rc{candidate}"
+
+          project = tomllib.loads(Path("pyproject.toml").read_text())
+          runtime_version = runpy.run_path("src/vcs_gen/__init__.py")["__version__"]
+          if project["project"]["version"] != version or runtime_version != version:
+              raise SystemExit(f"The package and runtime versions must both be {version}.")
+          PY
+
+      - name: Build the distribution
+        run: uv build
+
+      - name: Publish the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          ref="refs/tags/$RELEASE_TAG"
+          tag_refs=$(git ls-remote --tags origin "$ref" "$ref^{}")
+          tagged_commit=$(awk 'END { print $1 }' <<< "$tag_refs")
+          if [[ -z "$tagged_commit" ]]; then
+            gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" \
+              -f ref="$ref" -f sha="$GITHUB_SHA" --silent
+          elif [[ "$tagged_commit" != "$GITHUB_SHA" ]]; then
+            printf 'Tag %s is not on the build commit.\n' "$RELEASE_TAG" >&2
+            exit 1
+          fi
+
+          release_flags=(--verify-tag --generate-notes)
+          if [[ "$RELEASE_TAG" == *-rc.* ]]; then
+            release_flags+=(--prerelease)
+          fi
+          gh release create "$RELEASE_TAG" dist/*.whl dist/*.tar.gz "${release_flags[@]}"
