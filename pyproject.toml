@@ -41,7 +41,6 @@ dev = [
     "pytest-cov==7.1.0",
     "ruff==0.16.6",
     "ty==0.0.78",
-    "python-semantic-release==10.6.2",
 ]
 
 [tool.uv]
@@ -113,11 +112,3 @@ exclude_lines = [
     "raise NotImplementedError",
     "pass",
 ]
-
-[tool.semantic_release]
-version_variable = ["src/vcs_gen/__init__.py:__version__"]
-version_toml = ["pyproject.toml:project.version"]
-branch = "main"
-upload_to_pypi = true
-upload_to_release = true
-build_command = "uv build"

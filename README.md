@@ -152,3 +152,18 @@ vcs-gen gitignore generate Python --no-include-section-header
 ---
 
 *Note: This tool does not automatically purge old archives. To reclaim space, manually delete the cache directory.*
+
+## Releases
+
+Use the UTC date with unpadded month and day fields for the Git release tag.
+For example, use `2026.11.5` for a stable release or `2026.11.5-rc.1` for a release candidate.
+Compare the year, month, and day as numbers in that order.
+See [Calendar Versioning](https://calver.org/) and the [Python version specification](https://packaging.python.org/en/latest/specifications/version-specifiers/).
+
+Update the package and runtime versions in `pyproject.toml` and `src/vcs_gen/__init__.py` through a pull request.
+Use the Python package format `2026.11.5rc1` for the candidate tag `2026.11.5-rc.1`.
+Run `uv lock` to update the lockfile.
+
+After that pull request merges, run the **Release** workflow on `main` and enter the Git tag.
+It checks the version, creates the wheel and source archive, and attaches both to the GitHub release.
+Publication to PyPI requires a separate publisher configured for this repository.
